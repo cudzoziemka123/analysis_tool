@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Nested Analysis</title>
+    <style>
+      h2,
+      h3,
+      h4 {
+        margin-top: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        margin-bottom: 30px;
+      }
+      td,
+      th {
+        border: 1px solid #999;
+        padding: 4px 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nested Analysis</h1>
+
+    {% for value, lang_types in data.items %}
+    <h2>{{ value }}</h2>
+
+    {% for langtype, categories in lang_types.items %}
+    <h3>{{ langtype }}</h3>
+
+    {% for category, tags in categories.items %}
+    <h4>{{ category }}</h4>
+    <table>
+      <tr>
+        <th>Tag</th>
+        <th>Ilość</th>
+      </tr>
+      {% for tag_name, count in tags.items %}
+      <tr>
+        <td>{{ tag_name }}</td>
+        <td>{{ count }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endfor %} {% endfor %} {% endfor %}
+  </body>
+</html>

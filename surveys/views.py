@@ -1,5 +1,5 @@
+from collections import defaultdict
 import csv
-from .models import AnswerTag
 from django.http import HttpResponse
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
@@ -164,3 +164,50 @@ def export_answers_csv(request):
         ])
 
     return response
+
+
+def analysis_summary(request):
+    # Zbieramy dane
+    answer_tags = AnswerTag.objects.select_related("answer", "tag")
+    data = {}
+
+    for at in answer_tags:
+        value = at.answer.value
+        langtype = f"{at.answer.language}-{at.answer.type}"
+        category = at.tag.category
+        tag_name = at.tag.name
+
+        if not (value and langtype and category and tag_name):
+            continue
+
+        # Inicjalizacje zagnieżdżonych słowników
+        data.setdefault(value, {}).setdefault(
+            langtype, {}).setdefault(category, {})
+
+        # Zliczanie wystąpień tagów
+        data[value][langtype][category][tag_name] = data[value][langtype][category].get(
+            tag_name, 0) + 1
+
+    return render(request, "surveys/analysis_summary.html", {"data": data})
+# def nested_analysis(request):
+#     data = defaultdict(lambda: defaultdict(
+#         lambda: defaultdict(lambda: defaultdict(int))))
+
+#     queryset = AnswerTag.objects.select_related("answer", "tag")
+
+#     for at in queryset:
+#         value = at.answer.value
+#         lang = at.answer.language  # 'pl' or 'ua'
+#         typ = at.answer.type       # 'definicja' or 'skojarzenie'
+#         tag_category = at.tag.category  # e.g. 'Object', 'Action', etc.
+#         tag_name = at.tag.name
+
+#         key = f"{lang}-{'def' if typ == 'definicja' else 'skoj'}"
+
+#         data[value][key][tag_category][tag_name] += 1
+#     import pprint
+#     pprint.pprint(data)
+
+#     return render(request, "surveys/nested_analysis.html", {
+#         "data": data
+#     })

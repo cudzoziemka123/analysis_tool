@@ -1,0 +1,53 @@
+<!-- prettier-ignore-start -->
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Podsumowanie analizy</title>
+    <style>
+      table {
+        border-collapse: collapse;
+        margin-bottom: 30px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 5px 10px;
+      }
+      th {
+        background-color: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Podsumowanie analizy</h1>
+
+    {% for value, sections in data.items %}
+      <h2>{{ value }}</h2>
+      {% for langtype, categories in sections.items %}
+        <h3>{{ langtype }}</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Kategoria</th>
+              <th>Tag</th>
+              <th>Liczba</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category, tags in categories.items %}
+              {% for tag_name, count in tags.items %}
+                <tr>
+                  <td>{{ category }}</td>
+                  <td>{{ tag_name }}</td>
+                  <td>{{ count }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endfor %}
+    {% endfor %}
+  </body>
+</html>
+<!-- prettier-ignore-end -->
