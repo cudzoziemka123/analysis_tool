@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Odpowiedź #{{ answer.id }}</title>
+  </head>
+  <body>
+    <h1>Odpowiedź #{{ answer.id }}</h1>
+    <p><strong>Wartość:</strong> {{ answer.value }}</p>
+    <p><strong>Język:</strong> {{ answer.language }}</p>
+    <p><strong>Typ:</strong> {{ answer.type }}</p>
+    <p><strong>Treść:</strong> {{ answer.content }}</p>
+
+    <hr />
+    <h2>Przypisane cechy (tagi):</h2>
+    <ul>
+      {% for t in tags %}
+      <li>{{ t.tag.name }}</li>
+      {% empty %}
+      <li>Brak tagów.</li>
+      {% endfor %}
+    </ul>
+
+    <hr />
+    <h2>Dodaj nowy tag</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="text" name="tag_name" placeholder="Wpisz nazwę cechy" />
+      <button type="submit">Dodaj</button>
+    </form>
+
+    <p><a href="{% url 'answer_list' %}">← Wróć do listy</a></p>
+  </body>
+</html>

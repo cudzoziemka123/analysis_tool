@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista odpowiedzi</title>
+</head>
+<body>
+    <h1>Lista odpowiedzi</h1>
+
+    <form method="get">
+        <label>Wartość:
+            <select name="value">
+                <option value="">-- wszystkie --</option>
+                {% for val in values %}
+                    <option value="{{ val }}" {% if request.GET.value == val %}selected{% endif %}>{{ val }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>Język:
+            <!-- prettier-ignore -->
+            <select name="lang">
+                <option value="">-- wszystkie --</option>
+                {% for lang in languages %}
+                    <option value="{{ lang }}" {% if request.GET.lang == lang %}selected{% endif %}>{{ lang }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>Typ:
+            <select name="type">
+                <option value="">-- wszystkie --</option>
+                {% for t in types %}
+                    <option value="{{ t }}" {% if request.GET.type == t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <button type="submit">Filtruj</button>
+    </form>
+
+    <h2>Łącznie: {{ answers|length }} odpowiedzi</h2>
+
+    <ul>
+        {% for answer in answers %}
+            <li>
+                <a href="{% url 'answer_detail' pk=answer.pk %}">
+                    <strong>[{{ answer.language }} | {{ answer.type }} | {{ answer.value }}]</strong>
+                    {{ answer.content }}
+                </a>
+                &mdash; {{ answer.tag_count }} tagów
+            </li>
+        {% empty %}
+            <li>Brak odpowiedzi.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
