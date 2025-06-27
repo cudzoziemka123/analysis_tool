@@ -41,6 +41,9 @@
 
     <h2>Łącznie: {{ answers|length }} odpowiedzi</h2>
 
+    <p><a href="{% url 'export_answers' %}">📁 Eksportuj tagi do CSV</a></p>
+
+
     <ul>
         {% for answer in answers %}
             <li>
@@ -54,5 +57,21 @@
             <li>Brak odpowiedzi.</li>
         {% endfor %}
     </ul>
+
+    {% if answers.has_other_pages %}
+        <div class="pagination">
+            <span>
+                {% if answers.has_previous %}
+                    <a href="?page={{ answers.previous_page_number }}{% if request.GET.value %}&value={{ request.GET.value }}{% endif %}{% if request.GET.lang %}&lang={{ request.GET.lang }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">&laquo; Poprzednia</a>
+                {% endif %}
+
+                Strona {{ answers.number }} z {{ answers.paginator.num_pages }}
+
+                {% if answers.has_next %}
+                    <a href="?page={{ answers.next_page_number }}{% if request.GET.value %}&value={{ request.GET.value }}{% endif %}{% if request.GET.lang %}&lang={{ request.GET.lang }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">Następna &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
 </body>
 </html>

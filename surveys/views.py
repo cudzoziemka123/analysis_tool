@@ -1,24 +1,32 @@
+import csv
+from .models import AnswerTag
+from django.http import HttpResponse
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Answer, Tag, AnswerTag
 from .forms import TagForm
+from django.core.paginator import Paginator
 
 
 def answer_list(request):
-    answers = Answer.objects.all()
-
     value = request.GET.get("value")
     lang = request.GET.get("lang")
     type = request.GET.get("type")
 
-    if value:
-        answers = answers.filter(value=value)
-    if lang:
-        answers = answers.filter(language=lang)
-    if type:
-        answers = answers.filter(type=type)
+    answers_qs = Answer.objects.all()
 
-    answers = answers.annotate(tag_count=Count("answertag"))
+    if value:
+        answers_qs = answers_qs.filter(value=value)
+    if lang:
+        answers_qs = answers_qs.filter(language=lang)
+    if type:
+        answers_qs = answers_qs.filter(type=type)
+
+    answers_qs = answers_qs.annotate(tag_count=Count("answertag"))
+
+    paginator = Paginator(answers_qs, 30)
+    page_number = request.GET.get("page")
+    answers = paginator.get_page(page_number)
 
     values = Answer.objects.values_list("value", flat=True).distinct()
     languages = Answer.objects.values_list("language", flat=True).distinct()
@@ -121,3 +129,38 @@ def edit_tag(request, pk):
         form = TagForm(instance=tag)
 
     return render(request, "surveys/edit_tag.html", {"form": form, "tag": tag})
+
+
+def export_answers_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="tagged_answers.csv"'
+
+    # Ustawiamy kodowanie UTF-8 z BOM, żeby Excel sobie poradził
+    response.write('\ufeff')
+
+    writer = csv.writer(response, delimiter=';',
+                        quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+    # Nagłówki
+    writer.writerow([
+        'ID odpowiedzi',
+        'Treść odpowiedzi',
+        'Język',
+        'Typ',
+        'Wartość',
+        'Tag',
+        'Kategoria tagu'
+    ])
+
+    for answertag in AnswerTag.objects.select_related('answer', 'tag'):
+        writer.writerow([
+            answertag.answer.id,
+            answertag.answer.content,
+            answertag.answer.language,
+            answertag.answer.type,
+            answertag.answer.value,
+            answertag.tag.name,
+            answertag.tag.get_category_display()
+        ])
+
+    return response
