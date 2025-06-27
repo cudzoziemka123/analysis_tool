@@ -1,7 +1,7 @@
 from django.db.models import Count
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Answer, Tag, AnswerTag
-from django.shortcuts import render
+from .forms import TagForm
 
 
 def answer_list(request):
@@ -43,34 +43,54 @@ def answer_detail(request, pk):
         answertag__answer__type=answer.type
     ).distinct()
 
+    error_message = None
+
     if request.method == "POST":
-        if "add_new_tag" in request.POST:
-            tag_name = request.POST.get("tag_name").strip()
-            category = request.POST.get("category")
-            if tag_name:
-                tag, created = Tag.objects.get_or_create(
-                    name=tag_name, defaults={"category": category})
-                AnswerTag.objects.get_or_create(answer=answer, tag=tag)
-            return redirect("answer_detail", pk=answer.pk)
+        try:
+            if "add_new_tag" in request.POST:
+                tag_name = request.POST.get("tag_name", "").strip()
+                category = request.POST.get("category")
+                if not tag_name:
+                    error_message = "Nazwa tagu nie może być pusta."
+                else:
+                    tag, created = Tag.objects.get_or_create(
+                        name=tag_name, defaults={"category": category})
+                    AnswerTag.objects.get_or_create(answer=answer, tag=tag)
+                if not error_message:
+                    return redirect("answer_detail", pk=answer.pk)
 
-        if "assign_existing_tag" in request.POST:
-            tag_id = request.POST.get("existing_tag")
-            tag = Tag.objects.get(id=tag_id)
-            AnswerTag.objects.get_or_create(answer=answer, tag=tag)
-            return redirect("answer_detail", pk=answer.pk)
+            if "assign_existing_tag" in request.POST:
+                tag_id = request.POST.get("existing_tag")
+                if not tag_id:
+                    error_message = "Nie wybrano istniejącego tagu."
+                else:
+                    try:
+                        tag = Tag.objects.get(id=tag_id)
+                        AnswerTag.objects.get_or_create(answer=answer, tag=tag)
+                        return redirect("answer_detail", pk=answer.pk)
+                    except Tag.DoesNotExist:
+                        error_message = "Wybrany tag nie istnieje."
 
-        if "delete_tag" in request.POST:
-            tag_id = request.POST.get("tag_id")
-            AnswerTag.objects.filter(answer=answer, tag_id=tag_id).delete()
-            return redirect("answer_detail", pk=answer.pk)
+            if "delete_tag" in request.POST:
+                tag_id = request.POST.get("tag_id")
+                if not tag_id:
+                    error_message = "Nie wybrano tagu do usunięcia."
+                else:
+                    deleted, _ = AnswerTag.objects.filter(
+                        answer=answer, tag_id=tag_id).delete()
+                    if not deleted:
+                        error_message = "Nie znaleziono powiązania tagu do usunięcia."
+                    else:
+                        return redirect("answer_detail", pk=answer.pk)
+        except Exception as e:
+            error_message = f"Wystąpił błąd: {str(e)}"
 
     return render(request, "surveys/answer_detail.html", {
         "answer": answer,
         "tags": tags,
         "existing_tags": existing_tags,
-        "CATEGORY_CHOICES": Tag.CATEGORY_CHOICES,
-
-
+        "CATEGORY_CHOICES": getattr(Tag, 'CATEGORY_CHOICES', []),
+        "error_message": error_message,
     })
 
 
@@ -87,3 +107,17 @@ def answer_list_for_category(request, value, language, type):
         "language": language,
         "type": type,
     })
+
+
+def edit_tag(request, pk):
+    tag = get_object_or_404(Tag, pk=pk)
+
+    if request.method == "POST":
+        form = TagForm(request.POST, instance=tag)
+        if form.is_valid():
+            form.save()
+            return redirect("tag_edit", pk=tag.pk)
+    else:
+        form = TagForm(instance=tag)
+
+    return render(request, "surveys/edit_tag.html", {"form": form, "tag": tag})
