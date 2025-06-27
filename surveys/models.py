@@ -26,15 +26,27 @@ class Tag(models.Model):
     language = models.CharField(max_length=10)
     type = models.CharField(max_length=50)
 
+    CATEGORY_CHOICES = [
+        ("definition", "Określenie"),
+        ("object", "Obiekt"),
+        ("notion", "Pojęcie"),
+        ("experience", "Doznanie"),
+        ("action", "Działanie"),
+        ("attributes", "Atrybut"),
+    ]
+    category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default="pojęcie")
+
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.get_category_display()})"
 
     class Meta:
         unique_together = ('name', 'value', 'language', 'type')
 
 
 class AnswerTag(models.Model):
-    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    answer = models.ForeignKey(
+        Answer, related_name='answertag', on_delete=models.CASCADE)
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
 
     def __str__(self):

@@ -1,8 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
     <title>Odpowiedź #{{ answer.id }}</title>
+    <link rel="stylesheet" href="{% static 'surveys/style.css' %}" />
   </head>
   <body>
     <h1>Odpowiedź #{{ answer.id }}</h1>
@@ -14,19 +16,47 @@
     <hr />
     <h2>Przypisane cechy (tagi):</h2>
     <ul>
-      {% for t in tags %}
-      <li>{{ t.tag.name }}</li>
+      {% for tag in tags %}
+      <li class="tag {{ tag.tag.category }}">
+        {{ tag.tag.name }} ({{ tag.tag.get_category_display }})
+        <form method="post" style="display: inline">
+          {% csrf_token %}
+          <input type="hidden" name="tag_id" value="{{ tag.tag.id }}" />
+          <button type="submit" name="delete_tag">🗑️ Usuń</button>
+        </form>
+      </li>
       {% empty %}
-      <li>Brak tagów.</li>
+      <li>Brak przypisanych tagów.</li>
       {% endfor %}
     </ul>
 
     <hr />
+
+    <h3>Dodaj istniejący tag:</h3>
+    <form method="post">
+      {% csrf_token %}
+      <select name="existing_tag">
+        {% for tag in existing_tags %}
+        <option value="{{ tag.id }}">
+          {{ tag.name }} ({{ tag.get_category_display }})
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit" name="assign_existing_tag">➕ Przypisz</button>
+    </form>
+
+    <hr />
+
     <h2>Dodaj nowy tag</h2>
     <form method="post">
       {% csrf_token %}
       <input type="text" name="tag_name" placeholder="Wpisz nazwę cechy" />
-      <button type="submit">Dodaj</button>
+      <select name="category">
+        {% for key, label in CATEGORY_CHOICES %}
+        <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" name="add_new_tag">Dodaj</button>
     </form>
 
     <p><a href="{% url 'answer_list' %}">← Wróć do listy</a></p>

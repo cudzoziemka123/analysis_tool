@@ -2,10 +2,6 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from .models import Answer, Tag, AnswerTag
 from django.shortcuts import render
-from .models import Answer
-
-
-from django.db.models import Count
 
 
 def answer_list(request):
@@ -40,16 +36,41 @@ def answer_detail(request, pk):
     answer = get_object_or_404(Answer, pk=pk)
     tags = AnswerTag.objects.filter(answer=answer)
 
+    # Lista istniejących tagów dla tej samej kategorii (value + lang + type)
+    existing_tags = Tag.objects.filter(
+        answertag__answer__value=answer.value,
+        answertag__answer__language=answer.language,
+        answertag__answer__type=answer.type
+    ).distinct()
+
     if request.method == "POST":
-        tag_name = request.POST.get("tag_name").strip()
-        if tag_name:
-            tag, created = Tag.objects.get_or_create(name=tag_name)
+        if "add_new_tag" in request.POST:
+            tag_name = request.POST.get("tag_name").strip()
+            category = request.POST.get("category")
+            if tag_name:
+                tag, created = Tag.objects.get_or_create(
+                    name=tag_name, defaults={"category": category})
+                AnswerTag.objects.get_or_create(answer=answer, tag=tag)
+            return redirect("answer_detail", pk=answer.pk)
+
+        if "assign_existing_tag" in request.POST:
+            tag_id = request.POST.get("existing_tag")
+            tag = Tag.objects.get(id=tag_id)
             AnswerTag.objects.get_or_create(answer=answer, tag=tag)
-        return redirect("answer_detail", pk=answer.pk)
+            return redirect("answer_detail", pk=answer.pk)
+
+        if "delete_tag" in request.POST:
+            tag_id = request.POST.get("tag_id")
+            AnswerTag.objects.filter(answer=answer, tag_id=tag_id).delete()
+            return redirect("answer_detail", pk=answer.pk)
 
     return render(request, "surveys/answer_detail.html", {
         "answer": answer,
         "tags": tags,
+        "existing_tags": existing_tags,
+        "CATEGORY_CHOICES": Tag.CATEGORY_CHOICES,
+
+
     })
 
 

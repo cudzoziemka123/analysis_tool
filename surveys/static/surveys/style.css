@@ -1,0 +1,30 @@
+.tag.definition {
+  background-color: #d0f0ff;
+  padding: 3px;
+  border-radius: 5px;
+}
+.tag.object {
+  background-color: #ffe0b2;
+  padding: 3px;
+  border-radius: 5px;
+}
+.tag.notion {
+  background-color: #e0d0ff;
+  padding: 3px;
+  border-radius: 5px;
+}
+.tag.experience {
+  background-color: #f8bbd0;
+  padding: 3px;
+  border-radius: 5px;
+}
+.tag.action {
+  background-color: #c8e6c9;
+  padding: 3px;
+  border-radius: 5px;
+}
+.tag.attributes {
+  background-color: #ffccbc;
+  padding: 3px;
+  border-radius: 5px;
+}
