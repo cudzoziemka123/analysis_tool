@@ -9,6 +9,5 @@ urlpatterns = [
     path('tag/<int:pk>/edit/', views.edit_tag, name='tag_edit'),
     path('export/', views.export_answers_csv, name='export_answers'),
     path("analysis/", views.analysis_summary, name="analysis_summary"),
-    # path("analysis/nested/", views.nested_analysis, name="nested_analysis"),
 
 ]

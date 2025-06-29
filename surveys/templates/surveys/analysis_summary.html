@@ -1,53 +1,38 @@
-<!-- prettier-ignore-start -->
-<!DOCTYPE html>
-<html lang="pl">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Podsumowanie analizy</title>
-    <style>
-      table {
-        border-collapse: collapse;
-        margin-bottom: 30px;
-      }
-      th,
-      td {
-        border: 1px solid #ccc;
-        padding: 5px 10px;
-      }
-      th {
-        background-color: #eee;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Podsumowanie analizy</h1>
+{% extends "surveys/base.html" %}
 
-    {% for value, sections in data.items %}
-      <h2>{{ value }}</h2>
-      {% for langtype, categories in sections.items %}
-        <h3>{{ langtype }}</h3>
-        <table>
+{% block title %}Podsumowanie analizy{% endblock %}
+
+{% block content %}
+  <h1 class="text-3xl font-bold mb-6">Podsumowanie analizy</h1>
+
+  {% for value, sections in data.items %}
+    <h2 class="text-2xl font-semibold mt-8 mb-4">{{ value }}</h2>
+
+    {% for langtype, categories in sections.items %}
+      <h3 class="text-xl font-medium mb-2 text-gray-700">{{ langtype }}</h3>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full table-auto border-collapse border border-gray-300 mb-6 text-sm">
           <thead>
-            <tr>
-              <th>Kategoria</th>
-              <th>Tag</th>
-              <th>Liczba</th>
+            <tr class="bg-gray-100">
+              <th class="border border-gray-300 px-4 py-2 text-left">Kategoria</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">Tag</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">Liczba</th>
             </tr>
           </thead>
           <tbody>
             {% for category, tags in categories.items %}
               {% for tag_name, count in tags.items %}
-                <tr>
-                  <td>{{ category }}</td>
-                  <td>{{ tag_name }}</td>
-                  <td>{{ count }}</td>
+                <tr class="hover:bg-gray-50">
+                  <td class="border border-gray-300 px-4 py-2">{{ category }}</td>
+                  <td class="border border-gray-300 px-4 py-2">{{ tag_name }}</td>
+                  <td class="border border-gray-300 px-4 py-2">{{ count }}</td>
                 </tr>
               {% endfor %}
             {% endfor %}
           </tbody>
         </table>
-      {% endfor %}
+      </div>
     {% endfor %}
-  </body>
-</html>
-<!-- prettier-ignore-end -->
+  {% endfor %}
+{% endblock %}

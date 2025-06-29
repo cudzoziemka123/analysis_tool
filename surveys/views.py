@@ -16,7 +16,7 @@ def answer_list(request):
     answers_qs = Answer.objects.all()
 
     if value:
-        answers_qs = answers_qs.filter(value=value)
+        answers_qs = answers_qs.filter(value__iexact=value)
     if lang:
         answers_qs = answers_qs.filter(language=lang)
     if type:
@@ -65,7 +65,8 @@ def answer_detail(request, pk):
                         name=tag_name, defaults={"category": category})
                     AnswerTag.objects.get_or_create(answer=answer, tag=tag)
                 if not error_message:
-                    return redirect("answer_detail", pk=answer.pk)
+                    # Przekieruj z zachowanymi parametrami GET
+                    return redirect(f"{request.path}?{request.GET.urlencode()}")
 
             if "assign_existing_tag" in request.POST:
                 tag_id = request.POST.get("existing_tag")
@@ -75,7 +76,8 @@ def answer_detail(request, pk):
                     try:
                         tag = Tag.objects.get(id=tag_id)
                         AnswerTag.objects.get_or_create(answer=answer, tag=tag)
-                        return redirect("answer_detail", pk=answer.pk)
+                        # Przekieruj z zachowanymi parametrami GET
+                        return redirect(f"{request.path}?{request.GET.urlencode()}")
                     except Tag.DoesNotExist:
                         error_message = "Wybrany tag nie istnieje."
 
@@ -89,7 +91,8 @@ def answer_detail(request, pk):
                     if not deleted:
                         error_message = "Nie znaleziono powiązania tagu do usunięcia."
                     else:
-                        return redirect("answer_detail", pk=answer.pk)
+                        # Przekieruj z zachowanymi parametrami GET
+                        return redirect(f"{request.path}?{request.GET.urlencode()}")
         except Exception as e:
             error_message = f"Wystąpił błąd: {str(e)}"
 
@@ -119,16 +122,24 @@ def answer_list_for_category(request, value, language, type):
 
 def edit_tag(request, pk):
     tag = get_object_or_404(Tag, pk=pk)
+    next_url = request.GET.get('next', 'answer_list')
 
     if request.method == "POST":
         form = TagForm(request.POST, instance=tag)
         if form.is_valid():
             form.save()
-            return redirect("tag_edit", pk=tag.pk)
+            # Sprawdź parametr next z formularza POST, a jeśli nie ma, użyj z GET
+            next_url = request.POST.get('next', next_url)
+            # Przekieruj do strony, z której przyszedł użytkownik
+            return redirect(next_url)
     else:
         form = TagForm(instance=tag)
 
-    return render(request, "surveys/edit_tag.html", {"form": form, "tag": tag})
+    return render(request, "surveys/edit_tag.html", {
+        "form": form,
+        "tag": tag,
+        "next_url": next_url
+    })
 
 
 def export_answers_csv(request):
@@ -189,25 +200,3 @@ def analysis_summary(request):
             tag_name, 0) + 1
 
     return render(request, "surveys/analysis_summary.html", {"data": data})
-# def nested_analysis(request):
-#     data = defaultdict(lambda: defaultdict(
-#         lambda: defaultdict(lambda: defaultdict(int))))
-
-#     queryset = AnswerTag.objects.select_related("answer", "tag")
-
-#     for at in queryset:
-#         value = at.answer.value
-#         lang = at.answer.language  # 'pl' or 'ua'
-#         typ = at.answer.type       # 'definicja' or 'skojarzenie'
-#         tag_category = at.tag.category  # e.g. 'Object', 'Action', etc.
-#         tag_name = at.tag.name
-
-#         key = f"{lang}-{'def' if typ == 'definicja' else 'skoj'}"
-
-#         data[value][key][tag_category][tag_name] += 1
-#     import pprint
-#     pprint.pprint(data)
-
-#     return render(request, "surveys/nested_analysis.html", {
-#         "data": data
-#     })

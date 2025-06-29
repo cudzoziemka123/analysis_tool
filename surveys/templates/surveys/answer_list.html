@@ -1,77 +1,97 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>Lista odpowiedzi</title>
-</head>
-<body>
-    <h1>Lista odpowiedzi</h1>
+{% extends "surveys/base.html" %}
 
-    <form method="get">
-        <label>Wartość:
-            <select name="value">
-                <option value="">-- wszystkie --</option>
-                {% for val in values %}
-                    <option value="{{ val }}" {% if request.GET.value == val %}selected{% endif %}>{{ val }}</option>
-                {% endfor %}
-            </select>
-        </label>
+{% block title %}Lista odpowiedzi{% endblock %}
 
-        <label>Język:
-            <!-- prettier-ignore -->
-            <select name="lang">
-                <option value="">-- wszystkie --</option>
-                {% for lang in languages %}
-                    <option value="{{ lang }}" {% if request.GET.lang == lang %}selected{% endif %}>{{ lang }}</option>
-                {% endfor %}
-            </select>
-        </label>
+{% block content %}
+  <h2 class="text-2xl font-semibold mb-6">Lista odpowiedzi</h2>
 
-        <label>Typ:
-            <select name="type">
-                <option value="">-- wszystkie --</option>
-                {% for t in types %}
-                    <option value="{{ t }}" {% if request.GET.type == t %}selected{% endif %}>{{ t }}</option>
-                {% endfor %}
-            </select>
-        </label>
-
-        <button type="submit">Filtruj</button>
-    </form>
-
-    <h2>Łącznie: {{ answers|length }} odpowiedzi</h2>
-
-    <p><a href="{% url 'export_answers' %}">📁 Eksportuj tagi do CSV</a></p>
-
-
-    <ul>
-        {% for answer in answers %}
-            <li>
-                <a href="{% url 'answer_detail' pk=answer.pk %}">
-                    <strong>[{{ answer.language }} | {{ answer.type }} | {{ answer.value }}]</strong>
-                    {{ answer.content }}
-                </a>
-                &mdash; {{ answer.tag_count }} tagów
-            </li>
-        {% empty %}
-            <li>Brak odpowiedzi.</li>
-        {% endfor %}
-    </ul>
-
-    {% if answers.has_other_pages %}
-        <div class="pagination">
-            <span>
-                {% if answers.has_previous %}
-                    <a href="?page={{ answers.previous_page_number }}{% if request.GET.value %}&value={{ request.GET.value }}{% endif %}{% if request.GET.lang %}&lang={{ request.GET.lang }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">&laquo; Poprzednia</a>
-                {% endif %}
-
-                Strona {{ answers.number }} z {{ answers.paginator.num_pages }}
-
-                {% if answers.has_next %}
-                    <a href="?page={{ answers.next_page_number }}{% if request.GET.value %}&value={{ request.GET.value }}{% endif %}{% if request.GET.lang %}&lang={{ request.GET.lang }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">Następna &raquo;</a>
-                {% endif %}
-            </span>
+  <!-- Formularz filtrów -->
+  <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <form method="get" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Wartość:</label>
+          <select name="value" class="w-full border border-gray-300 rounded px-3 py-2">
+            <option value="">-- wszystkie --</option>
+            {% for val in values %}
+              <option value="{{ val }}" {% if request.GET.value == val %}selected{% endif %}>{{ val }}</option>
+            {% endfor %}
+          </select>
         </div>
-    {% endif %}
-</body>
-</html>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Język:</label>
+          <select name="lang" class="w-full border border-gray-300 rounded px-3 py-2">
+            <option value="">-- wszystkie --</option>
+            {% for lang in languages %}
+              <option value="{{ lang }}" {% if request.GET.lang == lang %}selected{% endif %}>{{ lang }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Typ:</label>
+          <select name="type" class="w-full border border-gray-300 rounded px-3 py-2">
+            <option value="">-- wszystkie --</option>
+            {% for t in types %}
+              <option value="{{ t }}" {% if request.GET.type == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Filtruj</button>
+    </form>
+  </div>
+
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-medium">Łącznie: {{ answers|length }} odpowiedzi</h3>
+    <a href="{% url 'export_answers' %}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📁 Eksportuj tagi do CSV</a>
+  </div>
+
+  <!-- Lista odpowiedzi -->
+  <div class="bg-white rounded-lg shadow-md">
+    <ul class="divide-y divide-gray-200">
+      {% for answer in answers %}
+        <li class="p-4 hover:bg-gray-50">
+          <a href="{% url 'answer_detail' pk=answer.pk %}{% if request.GET %}?{% for key, value in request.GET.items %}{% if not forloop.first %}&{% endif %}{{ key }}={{ value }}{% endfor %}{% endif %}" class="block">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">{{ answer.language }}</span>
+                  <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">{{ answer.type }}</span>
+                  <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">{{ answer.value }}</span>
+                </div>
+                <p class="text-gray-900">{{ answer.content }}</p>
+              </div>
+              <span class="bg-gray-100 text-gray-600 text-sm px-2 py-1 rounded ml-4">{{ answer.tag_count }} tagów</span>
+            </div>
+          </a>
+        </li>
+      {% empty %}
+        <li class="p-4 text-gray-500 text-center">Brak odpowiedzi.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Paginacja -->
+  {% if answers.has_other_pages %}
+    <div class="mt-6 flex justify-center">
+      <nav class="flex items-center space-x-2">
+        {% if answers.has_previous %}
+          <a href="?page={{ answers.previous_page_number }}{% if request.GET.value %}&value={{ request.GET.value }}{% endif %}{% if request.GET.lang %}&lang={{ request.GET.lang }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" 
+             class="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300">&laquo; Poprzednia</a>
+        {% endif %}
+
+        <span class="px-3 py-2 text-gray-700">
+          Strona {{ answers.number }} z {{ answers.paginator.num_pages }}
+        </span>
+
+        {% if answers.has_next %}
+          <a href="?page={{ answers.next_page_number }}{% if request.GET.value %}&value={{ request.GET.value }}{% endif %}{% if request.GET.lang %}&lang={{ request.GET.lang }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" 
+             class="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300">Następna &raquo;</a>
+        {% endif %}
+      </nav>
+    </div>
+  {% endif %}
+{% endblock %}
